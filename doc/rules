@@ -1,0 +1,7 @@
+expr: term (('+'|'-') term)*
+term: neg (('*'|'@'|'/'|'%'|'//') neg)*
+neg: ('+'|'-'|'~') neg | atom
+atom: (
+      '(' [expr] ')'
+      | number
+      )
