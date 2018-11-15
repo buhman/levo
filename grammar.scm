@@ -1,75 +1,83 @@
-(use comparse srfi-14)
+(module grammar
+    (parse-expr)
 
-;; combinators
+  (import scheme chicken)
+  (use comparse srfi-14)
 
-(define (char->operator s)
-  (case s
-    ((#\+) 'add)
-    ((#\-) 'sub)
-    ((#\*) 'mul)
-    ((#\/) 'div)))
+  ;; combinators
 
-(define (as-operator parser)
-  (bind parser
-        (o result char->operator)))
+  (define (char->operator s)
+    (case s
+      ((#\+) 'add)
+      ((#\-) 'sub)
+      ((#\*) 'mul)
+      ((#\/) 'div)))
 
-(define (as-number parser)
-  (bind (as-string parser)
-        (o result string->number)))
+  (define (as-operator parser)
+    (bind parser
+          (o result char->operator)))
 
-;; primitives
+  (define (as-number parser)
+    (bind (as-string parser)
+          (o result string->number)))
 
-(define ws
-  (zero-or-more (in char-set:whitespace)))
+  ;; primitives
 
-(define begin-paren
-  (is #\())
+  (define ws
+    (zero-or-more (in char-set:whitespace)))
 
-(define end-paren
-  (is #\)))
+  (define begin-paren
+    (is #\())
 
-(define number
-  (as-number (one-or-more (in char-set:digit))))
+  (define end-paren
+    (is #\)))
 
-(define expr-op
-  (as-operator (in #\+ #\-)))
+  (define number
+    (as-number (one-or-more (in char-set:digit))))
 
-(define tail-op
-  (as-operator (in #\* #\/)))
+  (define expr-op
+    (as-operator (in #\+ #\-)))
 
-;; rules
+  (define tail-op
+    (as-operator (in #\* #\/)))
 
-(define term-tail
-  (recursive-parser
-   (sequence* ((op tail-op)
-               (tail atom))
-              (result (cons op tail)))))
+  ;; rules
 
-(define term
-  (recursive-parser
-   (sequence* ((head atom)
-               (tail (zero-or-more term-tail)))
-              (result (cons head tail)))))
+  (define term-tail
+    (recursive-parser
+     (sequence* ((op tail-op)
+                 (tail atom))
+                (result (cons op tail)))))
 
-(define expr-tail
-  (recursive-parser
-   (sequence* ((op expr-op)
-               (tail term))
-              (result (cons op tail)))))
+  (define term
+    (recursive-parser
+     (sequence* ((head atom)
+                 (tail (zero-or-more term-tail)))
+                (result (cons head tail)))))
 
-(define expr
-  (recursive-parser
-   (sequence* ((head term)
-               (tail (zero-or-more expr-tail)))
-              (result (cons head tail)))))
+  (define expr-tail
+    (recursive-parser
+     (sequence* ((op expr-op)
+                 (tail term))
+                (result (cons op tail)))))
 
-(define paren-expr
-  (recursive-parser
-   (bind (enclosed-by
-          (preceded-by begin-paren ws)
-          expr
-          end-paren)
-         handle-paren-expr)))
+  (define expr
+    (recursive-parser
+     (sequence* ((head term)
+                 (tail (zero-or-more expr-tail)))
+                (result (cons head tail)))))
 
-(define atom
-  (enclosed-by ws (any-of number paren-expr) ws))
+  (define paren-expr
+    (recursive-parser
+     (enclosed-by
+      (preceded-by begin-paren ws)
+      expr
+      end-paren)))
+
+  (define atom
+    (enclosed-by ws (any-of number paren-expr) ws))
+
+  ;; api
+
+  (define (parse-expr s)
+    (parse expr s)))
