@@ -15,7 +15,8 @@
 
   (define (char->unary s)
     (case s
-      ((#\-) 'neg)))
+      ((#\-) 'neg)
+      ((#\!) 'fac)))
 
   (define (as-operator parser)
     (bind parser
@@ -51,6 +52,9 @@
 
   (define left-unary-op
     (as-unary (in #\-)))
+
+  (define right-unary-op
+    (as-unary (in #\!)))
 
   (define (group-ops head tail)
     (let ((ops (map car tail))
@@ -101,11 +105,22 @@
 
   (define left-unary
     (sequence* ((op left-unary-op)
-                (tail atom))
-      (result (cons op tail))))
+                (arg atom))
+      (result (cons (list op) arg))))
+
+  (define right-unary
+    (sequence* ((arg atom)
+                (op right-unary-op))
+      (result (cons (list op) arg))))
+
+  (define left-right-unary
+    (sequence* ((op-l left-unary-op)
+                (arg atom)
+                (op-r right-unary-op))
+      (result (cons (list op-r op-l) arg))))
 
   (define unary
-    (any-of left-unary atom))
+    (any-of left-right-unary right-unary left-unary atom))
 
   ;; api
 

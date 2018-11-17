@@ -1,12 +1,20 @@
 (use matchable)
 
+
+; write our own, because why not
+(define (fac n)
+  (case n
+    ((0) 1)
+    (else (* n (fac (- n 1))))))
+
 (define (op-func op)
   (match op
     ['add +]
     ['sub -]
     ['mul *]
     ['div /]
-    ['neg -]))
+    ['neg -]
+    ['fac fac]))
 
 (define (apply-op op args)
   (let ((func (op-func op))
@@ -14,12 +22,18 @@
         (b (cadr args)))
     (cons (func a b) (cddr args))))
 
+(define (apply-unary op arg)
+  ((op-func op) arg))
+
 (define (apply-ops ops args)
-  (match ops
-    [(op . rest) (apply-ops rest (apply-op op args))]
-    [() (car args)]
-    ;; a unary op; can only have one arg
-    [op ((op-func op) args)]))
+  (let ((app-func (match args
+                    [(_ . _) apply-op]
+                    [arg apply-unary])))
+    (match ops
+      [(op . rest) (apply-ops rest (app-func op args))]
+      [() (match args
+            [(arg . ()) arg]
+            [arg arg])])))
 
 (define (interp expr)
   (match expr
