@@ -2,7 +2,7 @@
     (parse-expr)
 
   (import scheme chicken)
-  (use comparse srfi-14)
+  (use comparse srfi-14 data-structures matchable)
 
   ;; combinators
 
@@ -41,31 +41,42 @@
   (define tail-op
     (as-operator (in #\* #\/)))
 
+  (define (group-ops head tail)
+    (let ((ops (map car tail))
+          (elts (map cdr tail)))
+      (list ops (cons head elts))))
+
+  (define (reduce-ops head tail)
+    (result (match tail
+              [() head]
+              [_ (group-ops head tail)])))
+
   ;; rules
 
   (define term-tail
     (recursive-parser
      (sequence* ((op tail-op)
                  (tail atom))
-                (result (cons op tail)))))
+       (result (cons op tail)))))
 
   (define term
     (recursive-parser
      (sequence* ((head atom)
                  (tail (zero-or-more term-tail)))
-                (result (cons head tail)))))
+       (reduce-ops head tail))))
+
 
   (define expr-tail
     (recursive-parser
      (sequence* ((op expr-op)
                  (tail term))
-                (result (cons op tail)))))
+       (result (cons op tail)))))
 
   (define expr
     (recursive-parser
      (sequence* ((head term)
                  (tail (zero-or-more expr-tail)))
-                (result (cons head tail)))))
+       (reduce-ops head tail))))
 
   (define paren-expr
     (recursive-parser
