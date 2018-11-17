@@ -13,9 +13,17 @@
       ((#\*) 'mul)
       ((#\/) 'div)))
 
+  (define (char->unary s)
+    (case s
+      ((#\-) 'neg)))
+
   (define (as-operator parser)
     (bind parser
           (o result char->operator)))
+
+  (define (as-unary parser)
+    (bind parser
+          (o result char->unary)))
 
   (define (as-number parser)
     (bind (as-string parser)
@@ -38,8 +46,11 @@
   (define expr-op
     (as-operator (in #\+ #\-)))
 
-  (define tail-op
+  (define term-op
     (as-operator (in #\* #\/)))
+
+  (define left-unary-op
+    (as-unary (in #\-)))
 
   (define (group-ops head tail)
     (let ((ops (map car tail))
@@ -55,13 +66,13 @@
 
   (define term-tail
     (recursive-parser
-     (sequence* ((op tail-op)
-                 (tail atom))
+     (sequence* ((op term-op)
+                 (tail unary))
        (result (cons op tail)))))
 
   (define term
     (recursive-parser
-     (sequence* ((head atom)
+     (sequence* ((head unary)
                  (tail (zero-or-more term-tail)))
        (reduce-ops head tail))))
 
@@ -88,7 +99,15 @@
   (define atom
     (enclosed-by ws (any-of number paren-expr) ws))
 
+  (define left-unary
+    (sequence* ((op left-unary-op)
+                (tail atom))
+      (result (cons op tail))))
+
+  (define unary
+    (any-of left-unary atom))
+
   ;; api
 
   (define (parse-expr s)
-    (parse expr s)))
+    (parse (followed-by expr end-of-input) s)))
