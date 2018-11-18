@@ -1,97 +1,96 @@
-(use matchable
-     entropy-clock
-     srfi-27
-     section-combinators)
+(module interpreter
+    (interpret)
 
-(random-source-randomize!
- (current-random-source)
- (make-entropy-source-system-clock))
+  (import scheme chicken)
+  (use matchable
+       entropy-clock
+       section-combinators
+       data-structures
+       srfi-1
+       srfi-27)
 
-; random integer in range [1,d]
-(define (random d)
-  (+ 1 ((random-integer/current) d)))
+  ;; operator implementations
 
-; write our own, because why not
-(define (fac n)
-  (case n
-    ((0) 1)
-    (else (* n (fac (- n 1))))))
+  (random-source-randomize!
+   (current-random-source)
+   (make-entropy-source-system-clock))
 
-(define (roll n d)
-  (case n
-    ((0) '())
-    (else (cons (random d)
-                (roll (- n 1) d)))))
+  ;; random integer in range [1,d]
 
-(define (log-result prefix val)
-  (begin
-    (print prefix val)
-    val))
+  (define (random d)
+    (+ 1 ((current-random-integer) d)))
 
-(define log-roll
-  (compose (left-section log-result "roll ") roll))
+  (define (fac n)
+    (case n
+      ((0) 1)
+      (else (* n (fac (- n 1))))))
 
-(define (sum l)
-  (apply + l))
+  (define (roll n d)
+    (case n
+      ((0) '())
+      (else (cons (random d)
+                  (roll (- n 1) d)))))
 
-(define (remove-first x xs)
-  (call-with-values
-      (lambda () (span (lambda (i) (not (= x i))) xs))
-    (lambda (h t)
-      (append h (match t
-                  [() '()]
-                  [else (cdr t)])))))
+  (define (log-result prefix val)
+    (begin
+      (print prefix val)
+      val))
 
-(define (take-cmp cmp n xs)
-  (case n
-    ((0) '())
-    (else (let* ((val (apply cmp xs))
-                 (rest (remove-first val xs)))
-            (cons val
-                  (take-cmp cmp (- n 1) rest))))))
+  (define log-roll
+    (compose (left-section log-result "roll ") roll))
 
-(define (op-func op)
-  (match op
-    ['add +]
-    ['sub -]
-    ['mul *]
-    ['div /]
-    ['neg -]
-    ['fac fac]
-    ['unary-die (left-section log-roll 1)]
-    ['sum-die (compose sum log-roll)]
-    ['list-die log-roll]
-    ['sum sum]
-    ['kh-one (left-section take-cmp max 1)]
-    ['kl-one (left-section take-cmp min 1)]
-    ['kh-n (flip (left-section take-cmp max))]
-    ['kl-n (flip (left-section take-cmp min))]))
+  (define (sum l)
+    (apply + l))
 
-(define (apply-op op args)
-  (let ((func (op-func op))
-        (a (car args))
-        (b (cadr args)))
-    (cons (func a b) (cddr args))))
+  (define (take-cmp cmp n xs)
+    (take (sort xs cmp) n))
 
-(define (apply-unary op arg)
-  ((op-func op) arg))
+  ;; operators
 
-(define (apply-ops ops args)
-  (let ((app-func (match args
-                    [(_ . _) apply-op]
-                    [arg apply-unary])))
-    (match ops
-      [(op . rest) (apply-ops rest (app-func op args))]
-      [() (match args
-            [(arg . ()) arg]
-            [arg arg])]
-      [op (apply-unary op args)])))
+  (define (op-func op)
+    (match op
+      ['add +]
+      ['sub -]
+      ['mul *]
+      ['div /]
+      ['neg -]
+      ['fac fac]
+      ['unary-die (left-section log-roll 1)]
+      ['sum-die (compose sum log-roll)]
+      ['list-die log-roll]
+      ['sum sum]
+      ['kh-one (left-section take-cmp > 1)]
+      ['kl-one (left-section take-cmp < 1)]
+      ['kh-n (flip (left-section take-cmp >))]
+      ['kl-n (flip (left-section take-cmp <))]))
 
-(define (interp expr)
-  (match expr
-    [(ops . (args . ()))
-     (let* ((args (map interp args)))
-       (apply-ops ops args))]
-    [(ops . arg)
-     (apply-ops ops (interp arg))]
-    [x x]))
+  (define (apply-op op args)
+    (let ((func (op-func op))
+          (a (car args))
+          (b (cadr args)))
+      (cons (func a b) (cddr args))))
+
+  (define (apply-unary op arg)
+    ((op-func op) arg))
+
+  (define (apply-ops ops args)
+    (let ((app-func (match args
+                      [(_ . _) apply-op]
+                      [arg apply-unary])))
+      (match ops
+        [(op . rest) (apply-ops rest (app-func op args))]
+        [() (match args
+              [(arg . ()) arg]
+              [arg arg])]
+        [op (apply-unary op args)])))
+
+  ;; api
+
+  (define (interpret expr)
+    (match expr
+      [(ops . (args . ()))
+       (let* ((args (map interpret args)))
+         (apply-ops ops args))]
+      [(ops . arg)
+       (apply-ops ops (interpret arg))]
+      [x x])))
