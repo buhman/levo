@@ -37,7 +37,9 @@
       val))
 
   (define log-roll
-    (compose (left-section log-result "roll ") roll))
+    (compose
+     ;;(left-section log-result "roll ")
+     roll))
 
   (define (sum l)
     (apply + l))
@@ -55,12 +57,12 @@
       ['div /]
       ['neg -]
       ['fac fac]
-      ['unary-die (left-section log-roll 1)]
+      ['unary-die (compose car (left-section log-roll 1))]
       ['sum-die (compose sum log-roll)]
       ['list-die log-roll]
       ['sum sum]
-      ['kh-one (left-section take-cmp > 1)]
-      ['kl-one (left-section take-cmp < 1)]
+      ['kh-one (compose car (left-section take-cmp > 1))]
+      ['kl-one (compose car (left-section take-cmp < 1))]
       ['kh-n (flip (left-section take-cmp >))]
       ['kl-n (flip (left-section take-cmp <))]))
 
