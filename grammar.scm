@@ -13,14 +13,18 @@
       [#\* 'mul]
       [#\/ 'div]
       [#\d 'sum-die]
-      [(#\l #\d) 'list-die]))
+      [(#\l #\d) 'list-die]
+      [(#\k #\h) 'kh-n]
+      [(#\k #\l) 'kl-n]))
 
   (define (char->unary s)
     (match s
       [#\- 'neg]
       [#\! 'fac]
       [#\d 'unary-die]
-      [#\s 'sum]))
+      [#\s 'sum]
+      [(#\k #\h) 'kh-one]
+      [(#\k #\l) 'kl-one]))
 
   (define (as-operator parser)
     (bind parser
@@ -57,14 +61,20 @@
   (define die-expr-op
     (as-operator
      (any-of
-      (is #\d)
-      (sequence (is #\l) (is #\d)))))
+      (in #\d)
+      (sequence (is #\l) (is #\d))
+      (sequence (is #\k) (is #\h))
+      (sequence (is #\k) (is #\l)))))
 
   (define left-unary-op
     (as-unary (in #\- #\d)))
 
   (define right-unary-op
-    (as-unary (in #\! #\s)))
+    (as-unary
+     (any-of
+      (in #\! #\s)
+      (sequence (is #\k) (is #\h))
+      (sequence (is #\k) (is #\l)))))
 
   (define (group-ops head tail)
     (let ((ops (map car tail))

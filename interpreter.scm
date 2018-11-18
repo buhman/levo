@@ -34,6 +34,22 @@
 (define (sum l)
   (apply + l))
 
+(define (remove-first x xs)
+  (call-with-values
+      (lambda () (span (lambda (i) (not (= x i))) xs))
+    (lambda (h t)
+      (append h (match t
+                  [() '()]
+                  [else (cdr t)])))))
+
+(define (take-cmp cmp n xs)
+  (case n
+    ((0) '())
+    (else (let* ((val (apply cmp xs))
+                 (rest (remove-first val xs)))
+            (cons val
+                  (take-cmp cmp (- n 1) rest))))))
+
 (define (op-func op)
   (match op
     ['add +]
@@ -45,7 +61,11 @@
     ['unary-die (left-section log-roll 1)]
     ['sum-die (compose sum log-roll)]
     ['list-die log-roll]
-    ['sum sum]))
+    ['sum sum]
+    ['kh-one (left-section take-cmp max 1)]
+    ['kl-one (left-section take-cmp min 1)]
+    ['kh-n (flip (left-section take-cmp max))]
+    ['kl-n (flip (left-section take-cmp min))]))
 
 (define (apply-op op args)
   (let ((func (op-func op))
