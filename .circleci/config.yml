@@ -1,0 +1,16 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: buhman/chicken:4.13.0-levo
+    steps:
+      - checkout
+      - run:
+          name: build modules
+          command: |
+            csc -emit-import-library grammar grammar.scm -to-stdout > /dev/null
+            csc -emit-import-library interpreter interpreter.scm -to-stdout > /dev/null
+      - run:
+          name: run tests
+          command: |
+            csi tests/run.scm
