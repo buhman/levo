@@ -1,11 +1,38 @@
-(use matchable)
+(use matchable
+     entropy-clock
+     srfi-27
+     section-combinators)
 
+(random-source-randomize!
+ (current-random-source)
+ (make-entropy-source-system-clock))
+
+; random integer in range [1,d]
+(define (random d)
+  (+ 1 ((random-integer/current) d)))
 
 ; write our own, because why not
 (define (fac n)
   (case n
     ((0) 1)
     (else (* n (fac (- n 1))))))
+
+(define (roll n d)
+  (case n
+    ((0) '())
+    (else (cons (random d)
+                (roll (- n 1) d)))))
+
+(define (log-result prefix val)
+  (begin
+    (print prefix val)
+    val))
+
+(define log-roll
+  (compose (left-section log-result "roll ") roll))
+
+(define (sum l)
+  (apply + l))
 
 (define (op-func op)
   (match op
@@ -14,7 +41,11 @@
     ['mul *]
     ['div /]
     ['neg -]
-    ['fac fac]))
+    ['fac fac]
+    ['unary-die (left-section log-roll 1)]
+    ['sum-die (compose sum log-roll)]
+    ['list-die log-roll]
+    ['sum sum]))
 
 (define (apply-op op args)
   (let ((func (op-func op))
@@ -33,7 +64,8 @@
       [(op . rest) (apply-ops rest (app-func op args))]
       [() (match args
             [(arg . ()) arg]
-            [arg arg])])))
+            [arg arg])]
+      [op (apply-unary op args)])))
 
 (define (interp expr)
   (match expr

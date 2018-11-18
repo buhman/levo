@@ -7,16 +7,20 @@
   ;; combinators
 
   (define (char->operator s)
-    (case s
-      ((#\+) 'add)
-      ((#\-) 'sub)
-      ((#\*) 'mul)
-      ((#\/) 'div)))
+    (match s
+      [#\+ 'add]
+      [#\- 'sub]
+      [#\* 'mul]
+      [#\/ 'div]
+      [#\d 'sum-die]
+      [(#\l #\d) 'list-die]))
 
   (define (char->unary s)
-    (case s
-      ((#\-) 'neg)
-      ((#\!) 'fac)))
+    (match s
+      [#\- 'neg]
+      [#\! 'fac]
+      [#\d 'unary-die]
+      [#\s 'sum]))
 
   (define (as-operator parser)
     (bind parser
@@ -50,11 +54,17 @@
   (define term-op
     (as-operator (in #\* #\/)))
 
+  (define die-expr-op
+    (as-operator
+     (any-of
+      (is #\d)
+      (sequence (is #\l) (is #\d)))))
+
   (define left-unary-op
-    (as-unary (in #\-)))
+    (as-unary (in #\- #\d)))
 
   (define right-unary-op
-    (as-unary (in #\!)))
+    (as-unary (in #\! #\s)))
 
   (define (group-ops head tail)
     (let ((ops (map car tail))
@@ -67,6 +77,19 @@
               [_ (group-ops head tail)])))
 
   ;; rules
+
+  (define die-expr-tail
+    (recursive-parser
+     (sequence* ((op die-expr-op)
+                 (tail atom))
+       (result (cons op tail)))))
+
+  (define die-expr
+    (recursive-parser
+     (sequence* ((head atom)
+                 (tail (zero-or-more die-expr-tail)))
+       (reduce-ops head tail))))
+
 
   (define term-tail
     (recursive-parser
@@ -105,22 +128,22 @@
 
   (define left-unary
     (sequence* ((op left-unary-op)
-                (arg atom))
-      (result (cons (list op) arg))))
+                (arg die-expr))
+      (result (cons op arg))))
 
   (define right-unary
-    (sequence* ((arg atom)
+    (sequence* ((arg die-expr)
                 (op right-unary-op))
-      (result (cons (list op) arg))))
+      (result (cons op arg))))
 
   (define left-right-unary
     (sequence* ((op-l left-unary-op)
-                (arg atom)
+                (arg die-expr)
                 (op-r right-unary-op))
       (result (cons (list op-r op-l) arg))))
 
   (define unary
-    (any-of left-right-unary right-unary left-unary atom))
+    (any-of left-right-unary right-unary left-unary die-expr))
 
   ;; api
 
