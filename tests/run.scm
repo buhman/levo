@@ -69,6 +69,9 @@
  (test "dice keep operator"
        '((list-die kh-n) (1 2 3))
        (parse-expr "1ld2kh3"))
+ (test "dice keep operator modifier"
+       '((add) ((sum (list-die kh-n) (2 20 1)) 8))
+       (parse-expr "2ld20kh1s+8"))
  (test "dice dependent roll"
        '((sum-die sum-die) (1 2 3))
        (parse-expr "1d2d3"))
@@ -148,6 +151,9 @@
  (test "list dice highest-n"
        '(6 5 4)
        (interp-rand "5ld6kh3"))
+ (test "list dice highest-n modifier"
+       24
+       (interp-rand "2ld20kh1s+8"))
  (test "dice distribution"
        '(20 1)
        (let* ((h (lambda (xs) (car (sort xs >))))
