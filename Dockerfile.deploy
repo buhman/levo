@@ -1,0 +1,7 @@
+FROM buhman/chicken:4.13.0-levo
+
+RUN apk add openssl-dev openssl ca-certificates
+
+RUN chicken-install spiffy json http-client openssl
+
+ADD . /levo

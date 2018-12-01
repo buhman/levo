@@ -74,8 +74,4 @@
     ;; fixme: hack
     (send-response status: 'ok body: body)))
 
-(define thread
-  (thread-start!
-   (lambda ()
-     (vhost-map `((".*" . ,(lambda (c) (handle-bot c)))))
-     (start-server))))
+(vhost-map `((".*" . ,(lambda (c) (handle-bot c)))))

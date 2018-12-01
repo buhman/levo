@@ -12,7 +12,7 @@
 
 ;; slack api
 
-(define slack-token 'xoxb-20575915168-476596924148-9JNBSSvrcKVdYcgkdaNNll1c)
+(define slack-token (string->symbol (get-environment-variable "SLACK_TOKEN")))
 
 (define (authorization-headers token)
   (headers `((content-type application/json)
