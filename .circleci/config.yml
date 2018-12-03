@@ -8,8 +8,7 @@ jobs:
       - run:
           name: build modules
           command: |
-            csc -emit-import-library grammar grammar.scm -to-stdout > /dev/null
-            csc -emit-import-library interpreter interpreter.scm -to-stdout > /dev/null
+            chicken-install -n
       - run:
           name: run tests
           command: |

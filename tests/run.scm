@@ -1,7 +1,6 @@
 (use test)
 
-(use grammar
-     interpreter
+(use levo
      srfi-27)
 
 ;; grammar
@@ -10,81 +9,81 @@
  "grammar"
  (test "literal 1"
        1
-       (parse-expr "1"))
+       (parse-string "1"))
  (test "whitespace"
        1
-       (parse-expr " 1 "))
+       (parse-string " 1 "))
  (test "single operator"
        '((add) (1 2))
-       (parse-expr "1+2"))
+       (parse-string "1+2"))
  (test "multiple operator"
        '((add sub) (1 2 3))
-       (parse-expr "1+2-3"))
+       (parse-string "1+2-3"))
  (test "operator whitespace"
        '((add sub) (1 2 3))
-       (parse-expr "1 + 2 - 3"))
+       (parse-string "1 + 2 - 3"))
  (test "operator precedence"
        '((add) (((mul) (1 2)) 3))
-       (parse-expr "1*2+3"))
+       (parse-string "1*2+3"))
  (test "paren reduction"
        '((add) (1 2))
-       (parse-expr "(((1)+2))"))
+       (parse-string "(((1)+2))"))
  (test "paren precedence"
        '((mul) (1 ((add) (2 3))))
-       (parse-expr "1*(2+3)"))
+       (parse-string "1*(2+3)"))
  (test "unary negation"
        '(neg . 1)
-       (parse-expr "-1"))
+       (parse-string "-1"))
  (test "unary left precedence"
        '((add) ((neg . 1) 2))
-       (parse-expr "-1 + 2"))
+       (parse-string "-1 + 2"))
  (test "unary left invalid"
        #f
-       (parse-expr "1 + -2"))
+       (parse-string "1 + -2"))
  (test "unary right invalid"
        #f
-       (parse-expr "1! + 2"))
+       (parse-string "1! + 2"))
  (test "unary right with paren"
        '((add) ((fac . 1) 2))
-       (parse-expr "(1!) + 2"))
+       (parse-string "(1!) + 2"))
  ;; XXX is this a misfeature?
  (test "unary left right precedence"
        '((fac neg) . 1)
-       (parse-expr "-1!")))
+       (parse-string "-1!")))
 
 (test-group
  "grammar dice"
  (test "unary die"
        '(unary-die . 20)
-       (parse-expr "d20"))
+       (parse-string "d20"))
  (test "dice precedence"
        '((add add) (1 ((sum-die) (2 3)) 4))
-       (parse-expr "1+2d3+4"))
+       (parse-string "1+2d3+4"))
  (test "dice sum"
        '(sum (list-die) (1 2))
-       (parse-expr "1ld2s"))
+       (parse-string "1ld2s"))
  (test "dice keep unary"
        '(kh-one (list-die) (1 2))
-       (parse-expr "1ld2kh"))
+       (parse-string "1ld2kh"))
  (test "dice keep operator"
        '((list-die kh-n) (1 2 3))
-       (parse-expr "1ld2kh3"))
+       (parse-string "1ld2kh3"))
  (test "dice keep operator modifier"
        '((add) ((sum (list-die kh-n) (2 20 1)) 8))
-       (parse-expr "2ld20kh1s+8"))
+       (parse-string "2ld20kh1s+8"))
  (test "dice dependent roll"
        '((sum-die sum-die) (1 2 3))
-       (parse-expr "1d2d3"))
+       (parse-string "1d2d3"))
  (test "dice dependent roll with precedence"
        '((sum-die) (1 ((sum-die) (2 3))))
-       (parse-expr "1d(2d3)"))
+       (parse-string "1d(2d3)"))
  (test "dice dependent roll keep"
        '(kl-one (sum-die list-die) (1 2 3))
-       (parse-expr "1d2ld3kl")))
+       (parse-string "1d2ld3kl")))
 
 ;; interpreter
 
-(define interp (o interpret parse-expr))
+(define interp (o interpret parse-string))
 
 (test-group
  "interpreter"
