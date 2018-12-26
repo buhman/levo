@@ -1,5 +1,6 @@
 ((synopsis "roll expression grammar and interpreter")
  (author "Zachary Buhman")
  (license "GPLv3")
+ (depends comparse matchable)
  (files "levo.scm" "grammar.scm" "interpreter.scm" "levo.setup"
         "README.rst"))

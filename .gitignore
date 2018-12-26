@@ -1,2 +1,7 @@
-*.import.scm
+levo.c
+*.import.*
 *.so
+*.o
+*.link
+*.build.sh
+*.install.sh

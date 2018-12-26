@@ -1,4 +1,4 @@
-FROM buhman/chicken:4.13.0-levo
+FROM buhman/chicken:levo
 
 RUN apk add openssl-dev openssl ca-certificates
 

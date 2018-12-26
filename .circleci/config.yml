@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: buhman/chicken:4.13.0-levo
+      - image: buhman/chicken:levo
     steps:
       - checkout
       - run:
