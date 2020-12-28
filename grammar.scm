@@ -1,4 +1,4 @@
-(use comparse srfi-14 data-structures matchable)
+(import comparse srfi-14 matchable)
 
 ;; combinators
 

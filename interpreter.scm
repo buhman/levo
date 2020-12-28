@@ -1,9 +1,8 @@
-(use matchable
-     entropy-clock
-     section-combinators
-     data-structures
-     srfi-1
-     srfi-27)
+(import matchable
+        srfi-1
+        srfi-27
+        entropy-clock
+        (chicken sort))
 
 ;; operator implementations
 
@@ -34,7 +33,7 @@
 
 (define log-roll
   (compose
-   ;;(left-section log-result "roll ")
+   ;;(lambda (v) (log-result "roll " v))
    roll))
 
 (define (sum l)
@@ -53,14 +52,14 @@
     ['div /]
     ['neg -]
     ['fac fac]
-    ['unary-die (compose car (left-section log-roll 1))]
+    ['unary-die (compose car (lambda (d) (log-roll 1 d)))]
     ['sum-die (compose sum log-roll)]
     ['list-die log-roll]
     ['sum sum]
-    ['kh-one (compose car (left-section take-cmp > 1))]
-    ['kl-one (compose car (left-section take-cmp < 1))]
-    ['kh-n (flip (left-section take-cmp >))]
-    ['kl-n (flip (left-section take-cmp <))]))
+    ['kh-one (compose car (lambda (xs) (take-cmp > 1 xs)))]
+    ['kl-one (compose car (lambda (xs) (take-cmp < 1 xs)))]
+    ['kh-n (flip (lambda (n xs) (take-cmp > n xs)))]
+    ['kl-n (flip (lambda (n xs) (take-cmp < n xs)))]))
 
 (define (apply-op op args)
   (let ((func (op-func op))

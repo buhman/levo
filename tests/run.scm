@@ -1,7 +1,8 @@
-(use test)
+(import test)
 
-(use levo
-     srfi-27)
+(import levo
+        srfi-27
+        (chicken sort))
 
 ;; grammar
 

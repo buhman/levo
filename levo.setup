@@ -1,7 +1,0 @@
-(compile -s -d1 -O3 "levo.scm" -j levo)
-(compile -s "levo.import.scm")
-
-(install-extension
- 'levo
- '("levo.so" "levo.import.so")
- '((version "0.1")))
