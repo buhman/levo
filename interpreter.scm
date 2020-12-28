@@ -58,8 +58,8 @@
     ['sum sum]
     ['kh-one (compose car (lambda (xs) (take-cmp > 1 xs)))]
     ['kl-one (compose car (lambda (xs) (take-cmp < 1 xs)))]
-    ['kh-n (flip (lambda (n xs) (take-cmp > n xs)))]
-    ['kl-n (flip (lambda (n xs) (take-cmp < n xs)))]))
+    ['kh-n (lambda (xs n) (take-cmp > n xs))]
+    ['kl-n (lambda (xs n) (take-cmp < n xs))]))
 
 (define (apply-op op args)
   (let ((func (op-func op))
